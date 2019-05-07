@@ -14,6 +14,9 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.WifiLock;
 import android.util.Log;
+import java.net.NetworkInterface;
+import java.util.Collections;
+import java.util.List;
 
 public class WifiAdmin extends CordovaPlugin { 
 	
@@ -69,7 +72,7 @@ public class WifiAdmin extends CordovaPlugin {
 			activity.put("BSSID", wifiInfo.getBSSID());
 			activity.put("HiddenSSID", wifiInfo.getHiddenSSID());
 			activity.put("SSID", wifiInfo.getSSID());
-			activity.put("MacAddress", wifiInfo.getMacAddress());
+			activity.put("MacAddress", getMacAddress());
 			activity.put("IpAddress", wifiInfo.getIpAddress());
 			activity.put("NetworkId", wifiInfo.getNetworkId());
 			activity.put("RSSI", wifiInfo.getRssi());
@@ -178,5 +181,30 @@ public class WifiAdmin extends CordovaPlugin {
 		callbackContext.success();
 
     	return null;
+    }
+    private static String getMacAddress() {
+        try {
+            List<NetworkInterface> all = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface nif : all) {
+                if (!nif.getName().equalsIgnoreCase("wlan0")) continue;
+
+                byte[] macBytes = nif.getHardwareAddress();
+                if (macBytes == null) {
+                    return "";
+                }
+
+                StringBuilder res1 = new StringBuilder();
+                for (byte b : macBytes) {
+                    res1.append(Integer.toHexString(b & 0xFF) + ":");
+                }
+
+                if (res1.length() > 0) {
+                    res1.deleteCharAt(res1.length() - 1);
+                }
+                return res1.toString();
+            }
+        } catch (Exception ex) {
+        }
+        return "02:00:00:00:00:00";
     }
 }
